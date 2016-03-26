@@ -19,6 +19,7 @@
     "fileSystem",
     "unlimitedStorage",
     "system.display",
+    "serial",
     "<all_urls>"
   ]
 }
