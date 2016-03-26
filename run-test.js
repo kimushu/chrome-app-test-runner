@@ -26,9 +26,7 @@ function runTests(filePath) {
 
   serverHandler.startServer(cliOptions["mock-server"])
   .then(function() {
-    var chromeProcess,
-    chromeDebugLogTransform = require("./chromeDebugLogTransform.js")("chrome-extension"),
-    logOutputHandler;
+    var chromeProcess;
 
     console.log("Running test " + path.join(process.cwd(), filePath));
 
