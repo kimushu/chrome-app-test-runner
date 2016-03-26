@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 var cliOptions = require("minimist")(process.argv.slice(2)),
 testFiles = cliOptions._,
 includeOveralCoverageSummary = testFiles.length > 1,
