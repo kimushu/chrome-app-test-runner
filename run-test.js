@@ -58,8 +58,15 @@ function runTests(filePath) {
       remoteDebugger.evaluate("window.__coverage__")
       .then(function(resp) {
         saveCoverage(JSON.stringify(resp), path.basename(filePath));
-        chromeProcess.kill();
-        setTimeout(function() {runTests(testFiles.shift());}, 800);
+        next = function() {
+          setTimeout(function() {runTests(testFiles.shift());}, 800);
+        };
+        if (!cliOptions["keep-chrome"]) {
+          chromeProcess.kill();
+          next();
+        } else {
+          chromeProcess.on('exit', next);
+        }
       })
       .catch(function(e) {
         console.log(e);
@@ -68,7 +75,9 @@ function runTests(filePath) {
 
     function failedTestHandler() {
       serverHandler.stopServer();
-      chromeProcess.kill();
+      if (!cliOptions["keep-chrome"]) {
+        chromeProcess.kill();
+      }
       process.exitCode = 1;
     }
 
