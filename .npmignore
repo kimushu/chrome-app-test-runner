@@ -1,3 +1,4 @@
 temp-data-dir/
 node_modules/
 test-browserified.js
+test-runner.html
