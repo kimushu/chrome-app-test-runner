@@ -8,7 +8,7 @@ module.exports = function(filePath, options) {
   cleanLaunchEnvironment();
   browserifyTestFile(path.join(process.cwd(), filePath));
   makeFileComplyWithCSP();
-  makeRunner(scriptList);
+  makeRunner();
 
   function cleanLaunchEnvironment() {
     var tempChromeDataPath = path.join(__dirname, "temp-data-dir");
@@ -30,7 +30,7 @@ module.exports = function(filePath, options) {
     fs.writeFileSync(path.join(__dirname, "test-browserified.js"), fileText.replace(/= \(Function\('return this'\)\)\(\);/g, "= window;"));
   }
 
-  function makeRunner(scriptList) {
+  function makeRunner() {
     var fileText = fs.readFileSync(path.join(__dirname, "test-runner.html.tmpl"), "utf-8");
     var newText = "";
     var scripts = options["load-scripts"];
