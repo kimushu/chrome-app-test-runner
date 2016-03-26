@@ -1,4 +1,4 @@
-module.exports = function(filePath, scriptList) {
+module.exports = function(filePath, options) {
   var fs = require("fs"),
   execSync = require("child_process").execSync,
   path = require("path"),
@@ -22,7 +22,7 @@ module.exports = function(filePath, scriptList) {
   }
 
   function browserifyTestFile(file) {
-    return execSync("browserify -t browserify-istanbul " + file + " -o " + path.join(__dirname, "test-browserified.js"), {cwd: __dirname});
+    return execSync("browserify -t browserify-istanbul -t coffeeify --extension=\".coffee\" " + file + " -o " + path.join(__dirname, "test-browserified.js"), {cwd: __dirname});
   }
 
   function makeFileComplyWithCSP() {
@@ -33,8 +33,9 @@ module.exports = function(filePath, scriptList) {
   function makeRunner(scriptList) {
     var fileText = fs.readFileSync(path.join(__dirname, "test-runner.html.tmpl"), "utf-8");
     var newText = "";
-    if (scriptList) {
-      scripts = scriptList.split(",");
+    var scripts = options["load-scripts"];
+    if (scripts) {
+      scripts = scripts.split(",");
       for (index in scripts) {
         script = scripts[index];
         name = path.basename(script);

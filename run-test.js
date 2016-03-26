@@ -22,7 +22,7 @@ function runTests(filePath) {
     return;
   }
 
-  require("./testFilePrep.js")(filePath, cliOptions["load-scripts"]);
+  require("./testFilePrep.js")(filePath, cliOptions);
 
   serverHandler.startServer(cliOptions["mock-server"])
   .then(function() {
