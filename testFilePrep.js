@@ -32,8 +32,8 @@ module.exports = function(filePath, scriptList) {
     var scr = "";
     if (scriptList) {
       scripts = scriptList.split(",");
-      for (script in scripts) {
-        scr += "<script src=\"" + script + "\" charset=\"utf-8\"></script>";
+      for (index in scripts) {
+        scr += "<script src=\"" + scripts[index] + "\" charset=\"utf-8\"></script>";
       }
     }
     fs.writeFileSync(path.join(__dirname, "test-runner.html"), fileText.replace("<!--LOAD-SCRIPTS-->", scr));
