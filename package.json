@@ -11,6 +11,7 @@
   "dependencies": {
     "browserify": "^10.2.4",
     "browserify-istanbul": "^0.2.1",
+    "coffeeify": "*",
     "istanbul": "^0.3.17",
     "minimist": "^1.1.1",
     "shelljs": "^0.5.1",
