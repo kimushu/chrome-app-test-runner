@@ -190,6 +190,17 @@ body {
   opacity: 1;
 }
 
+#mocha-report {
+  position: fixed;
+  top: 70px;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  padding-bottom: 20px;
+  overflow-y: scroll;
+  border: 1px solid #ccc;
+}
+
 #mocha-report.pass .test.fail {
   display: none;
 }
