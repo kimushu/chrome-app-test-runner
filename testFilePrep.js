@@ -3,47 +3,66 @@ module.exports = function(filePath, options) {
   execSync = require("child_process").execSync,
   path = require("path"),
   shelljs = require("shelljs"),
-  loadScriptsPath = path.join(__dirname, "load-scripts");
+  temp = require("temp"),
+  export_dir = options["export"],
+  dir = export_dir || temp.mkdirSync("test-"),
+  loader;
 
-  cleanLaunchEnvironment();
+  loader = copyLaunchEnvironment();
   browserifyTestFile(path.join(process.cwd(), filePath));
   makeFileComplyWithCSP();
-  makeRunner();
+  makeRunner(loader);
 
-  function cleanLaunchEnvironment() {
-    var tempChromeDataPath = path.join(__dirname, "temp-data-dir");
-    shelljs.rm("-f", path.join(__dirname, "test-browserified.js"));
-    shelljs.rm("-f", path.join(__dirname, "test-runner.html"));
-    shelljs.rm("-rf", tempChromeDataPath);
-    shelljs.mkdir(tempChromeDataPath);
-    shelljs.rm("-rf", loadScriptsPath);
-    shelljs.mkdir(loadScriptsPath);
-    shelljs.cp(path.join(__dirname, "First Run"), tempChromeDataPath);
-  }
+  function copyLaunchEnvironment() {
+    var tempDataPath = path.join(dir, "data"),
+    tempFilePath = path.join(dir, "file"),
+    scripts = options["load-scripts"],
+    files = options["load-files"],
+    copy = ["background-script.js", "configure-mocha.js", "manifest.json",
+            "mocha.css", "mocha.js", "start-mocha.js"],
+    loader = "";
 
-  function browserifyTestFile(file) {
-    return execSync("browserify -t browserify-istanbul -t coffeeify --extension=\".coffee\" " + file + " -o " + path.join(__dirname, "test-browserified.js"), {cwd: __dirname});
-  }
-
-  function makeFileComplyWithCSP() {
-    var fileText = fs.readFileSync(path.join(__dirname, "test-browserified.js"), "utf-8");
-    fs.writeFileSync(path.join(__dirname, "test-browserified.js"), fileText.replace(/= \(Function\('return this'\)\)\(\);/g, "= window;"));
-  }
-
-  function makeRunner() {
-    var fileText = fs.readFileSync(path.join(__dirname, "test-runner.html.tmpl"), "utf-8");
-    var newText = "";
-    var scripts = options["load-scripts"];
+    shelljs.mkdir(tempDataPath)
+    shelljs.mkdir(tempFilePath)
     if (scripts) {
       scripts = scripts.split(",");
       for (index in scripts) {
         script = scripts[index];
         name = path.basename(script);
-        shelljs.cp(script, path.join(loadScriptsPath, name));
-        newText += "<script src=\"load-scripts/" + name + "\" charset=\"utf-8\"></script>";
+        shelljs.cp(script, path.join(tempFilePath, name));
+        loader += "<script src=\"file/" + name + "\" charset=\"utf-8\"></script>";
       }
     }
-    fs.writeFileSync(path.join(__dirname, "test-runner.html"), fileText.replace("<!--LOAD-SCRIPTS-->", newText));
+    if (files) {
+      files = files.split(",");
+      for (index in files) {
+        file = files[index];
+        name = path.basename(file);
+        shelljs.cp(file, path.join(tempFilePath, name));
+      }
+    }
+    for (index in copy) {
+      file = copy[index];
+      name = path.basename(file);
+      shelljs.cp(path.join(__dirname, file), path.join(dir, name));
+    }
+    shelljs.cp(path.join(__dirname, "First Run"), tempDataPath);
+    return loader;
   }
 
+  function browserifyTestFile(file) {
+    return execSync("browserify -t browserify-istanbul -t coffeeify --extension=\".coffee\" " + file + " -o " + path.join(dir, "test-browserified.js"), {cwd: __dirname});
+  }
+
+  function makeFileComplyWithCSP() {
+    var fileText = fs.readFileSync(path.join(dir, "test-browserified.js"), "utf-8");
+    fs.writeFileSync(path.join(dir, "test-browserified.js"), fileText.replace(/= \(Function\('return this'\)\)\(\);/g, "= window;"));
+  }
+
+  function makeRunner(loader) {
+    var fileText = fs.readFileSync(path.join(__dirname, "test-runner.html.tmpl"), "utf-8");
+    fs.writeFileSync(path.join(dir, "test-runner.html"), fileText.replace("<!--LOAD-SCRIPTS-->", loader));
+  }
+
+  return (export_dir ? null : dir);
 };

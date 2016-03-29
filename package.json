@@ -15,6 +15,7 @@
     "istanbul": "^0.3.17",
     "minimist": "^1.1.1",
     "shelljs": "^0.5.1",
+    "temp": "*",
     "ws": "^0.7.2"
   },
   "bin": "run-test.js",

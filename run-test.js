@@ -7,13 +7,16 @@ coverageReporter = require("./coverageReporter.js"),
 spawn = require("child_process").spawn,
 serverHandler = require("./serverHandler.js"),
 remoteDebugger = require("./remote-debugger.js"),
-chromePath = require("./chromeFinder.js")();
+chromePath = require("./chromeFinder.js")(),
+shelljs = require("shelljs");
 
 if (!chromePath) {console.log("Chrome could not be found"); return;}
 
 runTests(testFiles.shift());
 
 function runTests(filePath) {
+  var dir;
+
   if (!filePath) {
     if (includeOveralCoverageSummary) {
       coverageReporter();
@@ -22,7 +25,14 @@ function runTests(filePath) {
     return;
   }
 
-  require("./testFilePrep.js")(filePath, cliOptions);
+  dir = require("./testFilePrep.js")(filePath, cliOptions);
+  if (!dir) {
+    return;
+  }
+
+  function cleanup() {
+    shelljs.rm("-rf", dir);
+  }
 
   serverHandler.startServer(cliOptions["mock-server"])
   .then(function() {
@@ -32,8 +42,8 @@ function runTests(filePath) {
 
     chromeProcess = spawn(chromePath, 
     ["--remote-debugging-port=9222",
-    "--user-data-dir=" + path.join(__dirname, "temp-data-dir"),
-    " --load-and-launch-app=" + __dirname], {detached: true})
+    "--user-data-dir=" + path.join(dir, "data"),
+    " --load-and-launch-app=" + dir], {detached: true})
     .on('error', function( err ){ throw err; });
 
     remoteDebugger.setDebugHandler(function(data) {
@@ -58,7 +68,10 @@ function runTests(filePath) {
       .then(function(resp) {
         saveCoverage(JSON.stringify(resp), path.basename(filePath));
         next = function() {
-          setTimeout(function() {runTests(testFiles.shift());}, 800);
+          setTimeout(function() {
+            cleanup();
+            runTests(testFiles.shift());
+          }, 800);
         };
         if (!cliOptions["keep-chrome"]) {
           chromeProcess.kill();
@@ -77,6 +90,7 @@ function runTests(filePath) {
       if (!cliOptions["keep-chrome"]) {
         chromeProcess.kill();
       }
+      cleanup();
       process.exitCode = 1;
     }
 
